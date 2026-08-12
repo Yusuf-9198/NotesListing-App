@@ -1,8 +1,8 @@
-import { Colors } from '@/constants/colors';
 import { useResponsive } from '@/hooks/useResponsive';
-import React, { useState } from 'react';
+import { useTheme } from '@/hooks/useTheme';
+import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
 import {
-    ImageBackground,
     KeyboardAvoidingView,
     Platform,
     Pressable,
@@ -11,7 +11,6 @@ import {
     StyleSheet,
     Text,
     TextInput,
-    useColorScheme,
     View,
 } from 'react-native';
 
@@ -30,10 +29,8 @@ export function NoteEditorScreen({
 }: NoteEditorScreenProps) {
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
-  const colorScheme = useColorScheme();
+  const { colors } = useTheme();
   const { containerPadding } = useResponsive();
-
-  const colors = colorScheme === 'dark' ? Colors.dark : Colors.light;
 
   const handleSave = () => {
     onSave?.(title, content);
@@ -49,36 +46,29 @@ export function NoteEditorScreen({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
       >
-        <ImageBackground
-          source={{ uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' }}
-          style={[styles.header, { backgroundColor: colors.primary }]}
-        >
+        <View style={[styles.header, { backgroundColor: colors.primary }]}>
           <View style={[styles.headerContent, { paddingHorizontal: containerPadding }]}>
             <Pressable
               onPress={handleBack}
               style={({ pressed }) => [
-                styles.headerButton,
-                { opacity: pressed ? 0.7 : 1 },
+                styles.iconButton,
+                { opacity: pressed ? 0.85 : 1 },
               ]}
             >
-              <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>
-                ← Back
-              </Text>
+              <Ionicons name="chevron-back" size={22} color="#fff" />
             </Pressable>
+            <Text style={[styles.headerTitle, { color: '#FFFFFF' }]}>Edit Note</Text>
             <Pressable
               onPress={handleSave}
               style={({ pressed }) => [
-                styles.headerButton,
-                styles.saveButton,
-                { opacity: pressed ? 0.7 : 1 },
+                styles.savePill,
+                { opacity: pressed ? 0.95 : 1, backgroundColor: colors.background },
               ]}
             >
-              <Text style={[styles.buttonText, { color: colors.background }]}>
-                Save
-              </Text>
+              <Text style={[styles.saveText, { color: colors.primary }]}>Save</Text>
             </Pressable>
           </View>
-        </ImageBackground>
+        </View>
 
         <ScrollView style={styles.scrollView}>
           <View style={[styles.content, { paddingHorizontal: containerPadding }]}>
@@ -128,21 +118,34 @@ const baseStyles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingVertical: 12,
+    paddingVertical: 14,
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
   },
   headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    minHeight: 64,
   },
-  headerButton: {
-    paddingHorizontal: 12,
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  iconButton: {
+    paddingHorizontal: 8,
     paddingVertical: 8,
   },
-  saveButton: {
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 8,
-    paddingHorizontal: 16,
+  savePill: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  saveText: {
+    fontSize: 15,
+    fontWeight: '700',
   },
   buttonText: {
     fontSize: 16,
@@ -168,7 +171,13 @@ const baseStyles = StyleSheet.create({
     paddingHorizontal: 12,
     borderWidth: 1,
     borderRadius: 12,
-    minHeight: 400,
+    minHeight: 320,
+    backgroundColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 20,
+    elevation: 4,
   },
 });
 

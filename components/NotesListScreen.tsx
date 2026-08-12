@@ -1,16 +1,15 @@
-import { Colors } from '@/constants/colors';
 import { useResponsive } from '@/hooks/useResponsive';
-import React, { useMemo, useState } from 'react';
+import { useTheme } from '@/hooks/useTheme';
+import { Ionicons } from '@expo/vector-icons';
+import { useMemo, useState } from 'react';
 import {
-    FlatList,
-    Pressable,
-    SafeAreaView,
-    StyleSheet,
-    Switch,
-    Text,
-    TextInput,
-    useColorScheme,
-    View,
+  FlatList,
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
 
 interface Note {
@@ -55,15 +54,13 @@ const sampleNotes: Note[] = [
 
 interface NotesListScreenProps {
   onNoteSelect?: (note: Note) => void;
+  onCreate?: () => void;
 }
 
-export function NotesListScreen({ onNoteSelect }: NotesListScreenProps) {
+export function NotesListScreen({ onNoteSelect, onCreate }: NotesListScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isDarkMode, setIsDarkMode] = useState(useColorScheme() === 'dark');
-  const colorScheme = useColorScheme();
+  const { colors } = useTheme();
   const { containerPadding, spacing } = useResponsive();
-
-  const colors = isDarkMode ? Colors.dark : Colors.light;
 
   const filteredNotes = useMemo(() => {
     return sampleNotes.filter(
@@ -79,38 +76,28 @@ export function NotesListScreen({ onNoteSelect }: NotesListScreenProps) {
       style={({ pressed }) => [
         styles.noteCard,
         {
-          backgroundColor: colors.backgroundSecondary,
-          opacity: pressed ? 0.7 : 1,
+          backgroundColor: colors.surface ?? colors.backgroundSecondary,
+          opacity: pressed ? 0.96 : 1,
+          shadowColor: colors.cardShadow,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 1,
+          shadowRadius: 14,
+          elevation: 6,
+          transform: pressed ? [{ scale: 0.997 }] : [{ scale: 1 }],
         },
       ]}
     >
       <View style={styles.noteHeader}>
-        <View style={{ flex: 1 }}>
-          <Text
-            style={[
-              styles.noteTitleText,
-              { color: colors.text },
-            ]}
-          >
-            {note.title}
-          </Text>
-          <Text
-            style={[
-              styles.noteDate,
-              { color: colors.textSecondary },
-            ]}
-          >
-            {note.date}
-          </Text>
+        <View style={styles.avatar}>
+          <Text style={[styles.avatarText, { color: colors.background }]}>{note.title.charAt(0)}</Text>
         </View>
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text style={[styles.noteTitleText, { color: colors.text }]}>{note.title}</Text>
+          <Text style={[styles.noteDate, { color: colors.textSecondary }]}>{note.date}</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
       </View>
-      <Text
-        style={[
-          styles.notePreview,
-          { color: colors.textSecondary },
-        ]}
-        numberOfLines={2}
-      >
+      <Text style={[styles.notePreview, { color: colors.textSecondary }]} numberOfLines={2}>
         {note.content}
       </Text>
     </Pressable>
@@ -120,36 +107,33 @@ export function NotesListScreen({ onNoteSelect }: NotesListScreenProps) {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingHorizontal: containerPadding }]}>
         <View>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>
-            Notes
-          </Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Notes</Text>
           <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
             {filteredNotes.length} notes
           </Text>
         </View>
-        <Switch
-          value={isDarkMode}
-          onValueChange={setIsDarkMode}
-          trackColor={{ false: '#ccc', true: '#555' }}
-        />
+        <View style={styles.headerRight}>
+          <Text style={[styles.headerSmall, { color: colors.textSecondary }]}>Search</Text>
+        </View>
       </View>
 
       <View style={[styles.searchContainer, { paddingHorizontal: containerPadding }]}>
-        <TextInput
-          style={[
-            styles.searchInput,
-            {
-              backgroundColor: colors.backgroundSecondary,
-              color: colors.text,
-              borderColor: colors.border,
-            },
-          ]}
-          placeholder="Search notes..."
-          placeholderTextColor={colors.textSecondary}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
+          <View style={[styles.searchBox, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}>
+            <Ionicons name="search" size={18} color={colors.textSecondary} style={{ marginLeft: 12 }} />
+            <TextInput
+              style={[
+                styles.searchInput,
+                {
+                  color: colors.text,
+                },
+              ]}
+              placeholder="Search notes..."
+              placeholderTextColor={colors.textSecondary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
+        </View>
 
       <FlatList
         data={filteredNotes}
@@ -169,6 +153,18 @@ export function NotesListScreen({ onNoteSelect }: NotesListScreenProps) {
           </View>
         }
       />
+      <Pressable
+        style={({ pressed }) => [
+          styles.fab,
+          {
+            backgroundColor: colors.primary,
+            opacity: pressed ? 0.85 : 1,
+          },
+        ]}
+        onPress={() => onCreate?.()}
+      >
+        <Text style={styles.fabText}>+</Text>
+      </Pressable>
     </SafeAreaView>
   );
 }
@@ -187,6 +183,13 @@ const baseStyles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '700',
   },
+  headerRight: {
+    alignItems: 'flex-end',
+  },
+  headerSmall: {
+    fontSize: 12,
+    opacity: 0.9,
+  },
   headerSubtitle: {
     fontSize: 14,
     marginTop: 4,
@@ -194,23 +197,28 @@ const baseStyles = StyleSheet.create({
   searchContainer: {
     paddingVertical: 8,
   },
-  searchInput: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
   noteCard: {
-    borderRadius: 12,
-    padding: 16,
-    marginVertical: 4,
+    borderRadius: 14,
+    padding: 18,
+    marginVertical: 6,
   },
   noteHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 8,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#2563EB',
+  },
+  avatarText: {
+    fontSize: 18,
+    fontWeight: '700',
   },
   noteTitleText: {
     fontSize: 18,
@@ -234,14 +242,40 @@ const baseStyles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
   },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 30,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  fabText: {
+    color: '#fff',
+    fontSize: 28,
+    lineHeight: 28,
+    fontWeight: '700',
+  },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    height: 44,
+  },
+  searchInput: {
+    flex: 1,
+    paddingHorizontal: 12,
+    fontSize: 16,
+  },
 });
 
-const styles = StyleSheet.compose(
-  baseStyles,
-  StyleSheet.create({
-    noteCard: {
-      ...baseStyles.noteCard,
-      borderRadius: 12,
-    },
-  })
-);
+// Use baseStyles directly
+const styles = baseStyles;

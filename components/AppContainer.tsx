@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View } from 'react-native';
 import { NoteEditorScreen } from './NoteEditorScreen';
 import { NotesListScreen } from './NotesListScreen';
@@ -29,10 +29,15 @@ export function AppContainer() {
     setSelectedNote(null);
   };
 
+  const handleCreate = () => {
+    setSelectedNote(null);
+    setCurrentScreen('editor');
+  };
+
   return (
     <View style={{ flex: 1 }}>
       {currentScreen === 'list' ? (
-        <NotesListScreen onNoteSelect={handleNoteSelect} />
+        <NotesListScreen onNoteSelect={handleNoteSelect} onCreate={handleCreate} />
       ) : (
         <NoteEditorScreen
           onSave={handleSave}
